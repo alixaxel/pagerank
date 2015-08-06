@@ -63,7 +63,7 @@ func (self *Graph) Rank(α, ε float64, callback func(id int, rank float64)) {
 	// Normalize all the edge weights so that their sum amounts to 1.
 	for source := range self.edges {
 		if self.nodes[source].outbound > 0 {
-			for target, _ := range self.edges[source] {
+			for target := range self.edges[source] {
 				self.edges[source][target] /= self.nodes[source].outbound
 			}
 		}
@@ -90,8 +90,8 @@ func (self *Graph) Rank(α, ε float64, callback func(id int, rank float64)) {
 		leak *= α
 
 		for source := range self.nodes {
-			for target := range self.edges[source] {
-				self.nodes[target].weight += α * nodes[source] * self.edges[source][target]
+			for target, weight := range self.edges[source] {
+				self.nodes[target].weight += α * nodes[source] * weight
 			}
 
 			self.nodes[source].weight += (1 - α) * inverse + leak * inverse
