@@ -12,14 +12,14 @@ type _Node struct {
 	Outbound float64
 }
 
-type _Graph struct {
+type Graph struct {
 	Edges map[int](map[int]float64) // @TODO: This data structure is not ideal.
 	Nodes map[int]*_Node
 }
 
 // New initializes and returns a new graph.
-func New() *_Graph {
-	return &_Graph{
+func New() *Graph {
+	return &Graph{
 		Edges: make(map[int](map[int]float64)),
 		Nodes: make(map[int]*_Node),
 	}
@@ -27,7 +27,7 @@ func New() *_Graph {
 
 // Link creates a weighted edge between a source-target node pair.
 // If the edge already exists, the weight is incremented.
-func (self *_Graph) Link(source, target int, weight float64) {
+func (self *Graph) Link(source, target int, weight float64) {
 	if _, ok := self.Nodes[source]; ok == false {
 		self.Nodes[source] = &_Node{
 			Weight:   0,
@@ -56,7 +56,7 @@ func (self *_Graph) Link(source, target int, weight float64) {
 // ε (epsilon) is the convergence criteria, usually set to a tiny value.
 //
 // This method will run as many iterations as needed, until the graph converges.
-func (self *_Graph) Rank(α, ε float64, callback func(id int, rank float64)) {
+func (self *Graph) Rank(α, ε float64, callback func(id int, rank float64)) {
 	Δ := float64(1.0)
 	inverse := 1 / float64(len(self.Nodes))
 
@@ -110,7 +110,7 @@ func (self *_Graph) Rank(α, ε float64, callback func(id int, rank float64)) {
 }
 
 // Reset clears all the current graph data.
-func (self *_Graph) Reset() {
+func (self *Graph) Reset() {
 	self.Edges = make(map[int](map[int]float64))
 	self.Nodes = make(map[int]*_Node)
 }
