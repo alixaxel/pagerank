@@ -17,8 +17,8 @@ type Graph struct {
 	nodes map[int]*node
 }
 
-// New initializes and returns a new graph.
-func New() *Graph {
+// NewGraph initializes and returns a new graph.
+func NewGraph() *Graph {
 	return &Graph{
 		edges: make(map[int](map[int]float64)),
 		nodes: make(map[int]*node),
