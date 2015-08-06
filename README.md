@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	graph := pagerank.New()
+	graph := pagerank.NewGraph()
 
 	graph.Link(1, 2, 1.0)
 	graph.Link(1, 3, 2.0)
