@@ -1,4 +1,4 @@
-# pagerank [![GoDoc](https://godoc.org/github.com/alixaxel/pagerank?status.svg)](https://godoc.org/github.com/alixaxel/pagerank)
+# pagerank [![GoDoc](https://godoc.org/github.com/alixaxel/pagerank?status.svg)](https://godoc.org/github.com/alixaxel/pagerank) [![GoCover](http://gocover.io/_badge/github.com/alixaxel/pagerank)](http://gocover.io/github.com/alixaxel/pagerank)
 
 Weighted PageRank implementation in Go
 
