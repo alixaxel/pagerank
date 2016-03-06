@@ -14,21 +14,21 @@ type node struct {
 
 // Graph holds node and edge data.
 type Graph struct {
-	edges map[int32](map[int32]float64)
-	nodes map[int32]*node
+	edges map[uint32](map[uint32]float64)
+	nodes map[uint32]*node
 }
 
 // NewGraph initializes and returns a new graph.
 func NewGraph() *Graph {
 	return &Graph{
-		edges: make(map[int32](map[int32]float64)),
-		nodes: make(map[int32]*node),
+		edges: make(map[uint32](map[uint32]float64)),
+		nodes: make(map[uint32]*node),
 	}
 }
 
 // Link creates a weighted edge between a source-target node pair.
 // If the edge already exists, the weight is incremented.
-func (self *Graph) Link(source, target int32, weight float64) {
+func (self *Graph) Link(source, target uint32, weight float64) {
 	if _, ok := self.nodes[source]; ok == false {
 		self.nodes[source] = &node{
 			weight:   0,
@@ -46,7 +46,7 @@ func (self *Graph) Link(source, target int32, weight float64) {
 	}
 
 	if _, ok := self.edges[source]; ok == false {
-		self.edges[source] = map[int32]float64{}
+		self.edges[source] = map[uint32]float64{}
 	}
 
 	self.edges[source][target] += weight
@@ -57,7 +57,7 @@ func (self *Graph) Link(source, target int32, weight float64) {
 // ε (epsilon) is the convergence criteria, usually set to a tiny value.
 //
 // This method will run as many iterations as needed, until the graph converges.
-func (self *Graph) Rank(α, ε float64, callback func(id int32, rank float64)) {
+func (self *Graph) Rank(α, ε float64, callback func(id uint32, rank float64)) {
 	Δ := float64(1.0)
 	inverse := 1 / float64(len(self.nodes))
 
@@ -76,7 +76,7 @@ func (self *Graph) Rank(α, ε float64, callback func(id int32, rank float64)) {
 
 	for Δ > ε {
 		leak := float64(0)
-		nodes := map[int32]float64{}
+		nodes := map[uint32]float64{}
 
 		for key, value := range self.nodes {
 			nodes[key] = value.weight
@@ -112,6 +112,6 @@ func (self *Graph) Rank(α, ε float64, callback func(id int32, rank float64)) {
 
 // Reset clears all the current graph data.
 func (self *Graph) Reset() {
-	self.edges = make(map[int32](map[int32]float64))
-	self.nodes = make(map[int32]*node)
+	self.edges = make(map[uint32](map[uint32]float64))
+	self.nodes = make(map[uint32]*node)
 }
