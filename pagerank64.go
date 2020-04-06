@@ -3,10 +3,6 @@ Package pagerank implements the *weighted* PageRank algorithm.
 */
 package pagerank
 
-import (
-	"math"
-)
-
 // Node64 is a node in a graph
 type Node64 struct {
 	weight   float64
@@ -100,19 +96,25 @@ func (g *Graph64) Rank(α, ε float64, callback func(id uint64, rank float64)) {
 
 		leak *= α
 
+		adjustment := (1-α)*inverse + leak*inverse
 		for source, node := range nodes {
 			sourceWeight := previous[source]
 			for target, weight := range node.edges {
 				nodes[target].weight += α * sourceWeight * weight
 			}
 
-			nodes[source].weight += (1-α)*inverse + leak*inverse
+			nodes[source].weight = node.weight + adjustment
 		}
 
 		Δ = 0
 
 		for source, node := range nodes {
-			Δ += math.Abs(node.weight - previous[source])
+			difference := node.weight - previous[source]
+			if difference < 0 {
+				Δ -= difference
+			} else {
+				Δ += difference
+			}
 		}
 	}
 

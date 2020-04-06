@@ -3,10 +3,6 @@ Package pagerank implements the *weighted* PageRank algorithm.
 */
 package pagerank
 
-import (
-	"math"
-)
-
 // Node32 is a node in a graph
 type Node32 struct {
 	weight   float32
@@ -100,19 +96,25 @@ func (g *Graph32) Rank(α, ε float32, callback func(id uint64, rank float32)) {
 
 		leak *= α
 
+		adjustment := (1-α)*inverse + leak*inverse
 		for source, node := range nodes {
 			sourceWeight := previous[source]
 			for target, weight := range node.edges {
 				nodes[target].weight += α * sourceWeight * weight
 			}
 
-			nodes[source].weight += (1-α)*inverse + leak*inverse
+			nodes[source].weight = node.weight + adjustment
 		}
 
 		Δ = 0
 
 		for source, node := range nodes {
-			Δ += float32(math.Abs(float64(node.weight - previous[source])))
+			difference := node.weight - previous[source]
+			if difference < 0 {
+				Δ -= difference
+			} else {
+				Δ += difference
+			}
 		}
 	}
 
