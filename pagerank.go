@@ -7,49 +7,58 @@ import (
 	"math"
 )
 
-type node struct {
+// Node64 is a node in a graph
+type Node64 struct {
 	weight   float64
 	outbound float64
+	edges    map[uint]float64
 }
 
-// Graph holds node and edge data.
-type Graph struct {
-	edges map[uint32](map[uint32]float64)
-	nodes map[uint32]*node
+// Graph64 holds node and edge data.
+type Graph64 struct {
+	count uint
+	index map[uint64]uint
+	nodes []Node64
 }
 
-// NewGraph initializes and returns a new graph.
-func NewGraph() *Graph {
-	return &Graph{
-		edges: make(map[uint32](map[uint32]float64)),
-		nodes: make(map[uint32]*node),
+// NewGraph64 initializes and returns a new graph.
+func NewGraph64(size ...uint) *Graph64 {
+	capacity := uint(8)
+	if len(size) == 1 {
+		capacity = size[0]
+	}
+	return &Graph64{
+		index: make(map[uint64]uint, capacity),
+		nodes: make([]Node64, 0, capacity),
 	}
 }
 
 // Link creates a weighted edge between a source-target node pair.
 // If the edge already exists, the weight is incremented.
-func (self *Graph) Link(source, target uint32, weight float64) {
-	if _, ok := self.nodes[source]; ok == false {
-		self.nodes[source] = &node{
-			weight:   0,
-			outbound: 0,
-		}
+func (g *Graph64) Link(source, target uint64, weight float64) {
+	s, ok := g.index[source]
+	if !ok {
+		s = g.count
+		g.index[source] = s
+		g.nodes = append(g.nodes, Node64{})
+		g.count++
 	}
 
-	self.nodes[source].outbound += weight
+	g.nodes[s].outbound += weight
 
-	if _, ok := self.nodes[target]; ok == false {
-		self.nodes[target] = &node{
-			weight:   0,
-			outbound: 0,
-		}
+	t, ok := g.index[target]
+	if !ok {
+		t = g.count
+		g.index[target] = t
+		g.nodes = append(g.nodes, Node64{})
+		g.count++
 	}
 
-	if _, ok := self.edges[source]; ok == false {
-		self.edges[source] = map[uint32]float64{}
+	if g.nodes[s].edges == nil {
+		g.nodes[s].edges = map[uint]float64{}
 	}
 
-	self.edges[source][target] += weight
+	g.nodes[s].edges[t] += weight
 }
 
 // Rank computes the PageRank of every node in the directed graph.
@@ -57,61 +66,68 @@ func (self *Graph) Link(source, target uint32, weight float64) {
 // ε (epsilon) is the convergence criteria, usually set to a tiny value.
 //
 // This method will run as many iterations as needed, until the graph converges.
-func (self *Graph) Rank(α, ε float64, callback func(id uint32, rank float64)) {
+func (g *Graph64) Rank(α, ε float64, callback func(id uint64, rank float64)) {
 	Δ := float64(1.0)
-	inverse := 1 / float64(len(self.nodes))
+	nodes := g.nodes
+	inverse := 1 / float64(len(nodes))
 
 	// Normalize all the edge weights so that their sum amounts to 1.
-	for source := range self.edges {
-		if self.nodes[source].outbound > 0 {
-			for target := range self.edges[source] {
-				self.edges[source][target] /= self.nodes[source].outbound
+	for _, node := range nodes {
+		if outbound := node.outbound; outbound > 0 {
+			for target := range node.edges {
+				node.edges[target] /= outbound
 			}
 		}
 	}
 
-	for key := range self.nodes {
-		self.nodes[key].weight = inverse
+	for source := range nodes {
+		nodes[source].weight = inverse
 	}
 
+	previous := make([]float64, len(nodes))
 	for Δ > ε {
 		leak := float64(0)
-		nodes := map[uint32]float64{}
 
-		for key, value := range self.nodes {
-			nodes[key] = value.weight
+		for source, node := range nodes {
+			previous[source] = node.weight
 
-			if value.outbound == 0 {
-				leak += value.weight
+			if node.outbound == 0 {
+				leak += node.weight
 			}
 
-			self.nodes[key].weight = 0
+			nodes[source].weight = 0
 		}
 
 		leak *= α
 
-		for source := range self.nodes {
-			for target, weight := range self.edges[source] {
-				self.nodes[target].weight += α * nodes[source] * weight
+		for source, node := range nodes {
+			sourceWeight := previous[source]
+			for target, weight := range node.edges {
+				nodes[target].weight += α * sourceWeight * weight
 			}
 
-			self.nodes[source].weight += (1-α)*inverse + leak*inverse
+			nodes[source].weight += (1-α)*inverse + leak*inverse
 		}
 
 		Δ = 0
 
-		for key, value := range self.nodes {
-			Δ += math.Abs(value.weight - nodes[key])
+		for source, node := range nodes {
+			Δ += math.Abs(node.weight - previous[source])
 		}
 	}
 
-	for key, value := range self.nodes {
-		callback(key, value.weight)
+	for key, value := range g.index {
+		callback(key, nodes[value].weight)
 	}
 }
 
 // Reset clears all the current graph data.
-func (self *Graph) Reset() {
-	self.edges = make(map[uint32](map[uint32]float64))
-	self.nodes = make(map[uint32]*node)
+func (g *Graph64) Reset(size ...uint) {
+	capacity := uint(8)
+	if len(size) == 1 {
+		capacity = size[0]
+	}
+	g.count = 0
+	g.index = make(map[uint64]uint, capacity)
+	g.nodes = make([]Node64, 0, capacity)
 }
