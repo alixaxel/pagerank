@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestEmpty(t *testing.T) {
+func TestEmpty64(t *testing.T) {
 	graph := NewGraph64()
 
 	actual := map[uint64]float64{}
@@ -20,7 +20,7 @@ func TestEmpty(t *testing.T) {
 	}
 }
 
-func TestSimple(t *testing.T) {
+func TestSimple64(t *testing.T) {
 	graph := NewGraph64()
 
 	graph.Link(1, 2, 1.0)
@@ -46,7 +46,7 @@ func TestSimple(t *testing.T) {
 	}
 }
 
-func TestWeighted(t *testing.T) {
+func TestWeighted64(t *testing.T) {
 	graph := NewGraph64()
 
 	graph.Link(1, 2, 1.0)
@@ -72,7 +72,7 @@ func TestWeighted(t *testing.T) {
 	}
 }
 
-func TestDuplicates(t *testing.T) {
+func TestDuplicates64(t *testing.T) {
 	graph := NewGraph64()
 
 	graph.Link(1, 2, 1.0)
@@ -101,7 +101,7 @@ func TestDuplicates(t *testing.T) {
 	}
 }
 
-func TestDuplicatesAfterReset(t *testing.T) {
+func TestDuplicatesAfterReset64(t *testing.T) {
 	graph := NewGraph64()
 
 	graph.Link(1, 2, 1.0)
@@ -128,5 +128,167 @@ func TestDuplicatesAfterReset(t *testing.T) {
 
 	if reflect.DeepEqual(actual, expected) != true {
 		t.Error("Expected", expected, "but got", actual)
+	}
+}
+
+func BenchmarkGraph64(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		graph := NewGraph64()
+
+		graph.Link(1, 2, 1.0)
+		graph.Link(1, 3, 2.0)
+		graph.Link(2, 3, 3.0)
+		graph.Link(2, 4, 4.0)
+		graph.Link(3, 1, 5.0)
+
+		results := map[uint64]float64{}
+
+		graph.Rank(0.85, 0.000001, func(node uint64, rank float64) {
+			results[node] = rank
+		})
+	}
+}
+
+func TestEmpty32(t *testing.T) {
+	graph := NewGraph32()
+
+	actual := map[uint64]float32{}
+	expected := map[uint64]float32{}
+
+	graph.Rank(0.85, 0.000001, func(node uint64, rank float32) {
+		actual[node] = rank
+	})
+
+	if reflect.DeepEqual(actual, expected) != true {
+		t.Error("Expected", expected, "but got", actual)
+	}
+}
+
+func TestSimple32(t *testing.T) {
+	graph := NewGraph32()
+
+	graph.Link(1, 2, 1.0)
+	graph.Link(1, 3, 1.0)
+	graph.Link(2, 3, 1.0)
+	graph.Link(2, 4, 1.0)
+	graph.Link(3, 1, 1.0)
+
+	actual := map[uint64]float32{}
+	expected := map[uint64]float32{
+		1: 0.32721835,
+		2: 0.21086994,
+		3: 0.30048975,
+		4: 0.16142192,
+	}
+
+	graph.Rank(0.85, 0.000001, func(node uint64, rank float32) {
+		actual[node] = rank
+	})
+
+	if reflect.DeepEqual(actual, expected) != true {
+		t.Error("Expected", expected, "but got", actual)
+	}
+}
+
+func TestWeighted32(t *testing.T) {
+	graph := NewGraph32()
+
+	graph.Link(1, 2, 1.0)
+	graph.Link(1, 3, 2.0)
+	graph.Link(2, 3, 3.0)
+	graph.Link(2, 4, 4.0)
+	graph.Link(3, 1, 5.0)
+
+	actual := map[uint64]float32{}
+	expected := map[uint64]float32{
+		1: 0.34983802,
+		2: 0.16887322,
+		3: 0.32951212,
+		4: 0.15177679,
+	}
+
+	graph.Rank(0.85, 0.000001, func(node uint64, rank float32) {
+		actual[node] = rank
+	})
+
+	if reflect.DeepEqual(actual, expected) != true {
+		t.Error("Expected", expected, "but got", actual)
+	}
+}
+
+func TestDuplicates32(t *testing.T) {
+	graph := NewGraph32()
+
+	graph.Link(1, 2, 1.0)
+	graph.Link(1, 3, 2.0)
+	graph.Link(2, 3, 3.0)
+	graph.Link(2, 4, 4.0)
+	graph.Link(3, 1, 5.0)
+
+	graph.Link(1, 2, 6.0)
+	graph.Link(1, 3, 7.0)
+
+	actual := map[uint64]float32{}
+	expected := map[uint64]float32{
+		1: 0.33123338,
+		2: 0.19655848,
+		3: 0.30335557,
+		4: 0.16885251,
+	}
+
+	graph.Rank(0.85, 0.000001, func(node uint64, rank float32) {
+		actual[node] = rank
+	})
+
+	if reflect.DeepEqual(actual, expected) != true {
+		t.Error("Expected", expected, "but got", actual)
+	}
+}
+
+func TestDuplicatesAfterReset32(t *testing.T) {
+	graph := NewGraph32()
+
+	graph.Link(1, 2, 1.0)
+	graph.Link(1, 3, 2.0)
+	graph.Link(2, 3, 3.0)
+	graph.Link(2, 4, 4.0)
+	graph.Link(3, 1, 5.0)
+
+	graph.Reset()
+
+	graph.Link(1, 2, 6.0)
+	graph.Link(1, 3, 7.0)
+
+	actual := map[uint64]float32{}
+	expected := map[uint64]float32{
+		1: 0.25974017,
+		2: 0.36163837,
+		3: 0.3786214,
+	}
+
+	graph.Rank(0.85, 0.000001, func(node uint64, rank float32) {
+		actual[node] = rank
+	})
+
+	if reflect.DeepEqual(actual, expected) != true {
+		t.Error("Expected", expected, "but got", actual)
+	}
+}
+
+func BenchmarkGraph32(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		graph := NewGraph64()
+
+		graph.Link(1, 2, 1.0)
+		graph.Link(1, 3, 2.0)
+		graph.Link(2, 3, 3.0)
+		graph.Link(2, 4, 4.0)
+		graph.Link(3, 1, 5.0)
+
+		results := map[uint64]float64{}
+
+		graph.Rank(0.85, 0.000001, func(node uint64, rank float64) {
+			results[node] = rank
+		})
 	}
 }
