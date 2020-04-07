@@ -5,7 +5,7 @@ package pagerank
 
 // Node64 is a node in a graph
 type Node64 struct {
-	weight   float64
+	weight   [2]float64
 	outbound float64
 	edges    map[uint]float64
 }
@@ -76,50 +76,48 @@ func (g *Graph64) Rank(α, ε float64, callback func(id uint64, rank float64)) {
 		}
 	}
 
-	for source := range nodes {
-		nodes[source].weight = inverse
+	leak := float64(0)
+
+	a, b := 0, 1
+	for source, node := range nodes {
+		nodes[source].weight[a] = inverse
+
+		if node.outbound == 0 {
+			leak += inverse
+		}
 	}
 
-	previous := make([]float64, len(nodes))
 	for Δ > ε {
-		leak := float64(0)
-
+		adjustment := (1-α)*inverse + α*leak*inverse
 		for source, node := range nodes {
-			previous[source] = node.weight
-
-			if node.outbound == 0 {
-				leak += node.weight
-			}
-
-			nodes[source].weight = 0
-		}
-
-		leak *= α
-
-		adjustment := (1-α)*inverse + leak*inverse
-		for source, node := range nodes {
-			sourceWeight := previous[source]
+			aa, bb := α*node.weight[a], node.weight[b]
 			for target, weight := range node.edges {
-				nodes[target].weight += α * sourceWeight * weight
+				nodes[target].weight[b] += aa * weight
 			}
 
-			nodes[source].weight = node.weight + adjustment
+			nodes[source].weight[b] = bb + adjustment
 		}
 
-		Δ = 0
-
+		Δ, leak = 0, 0
 		for source, node := range nodes {
-			difference := node.weight - previous[source]
-			if difference < 0 {
+			aa, bb := node.weight[a], node.weight[b]
+			if difference := aa - bb; difference < 0 {
 				Δ -= difference
 			} else {
 				Δ += difference
 			}
+
+			if node.outbound == 0 {
+				leak += bb
+			}
+			nodes[source].weight[a] = 0
 		}
+
+		a, b = b, a
 	}
 
 	for key, value := range g.index {
-		callback(key, nodes[value].weight)
+		callback(key, nodes[value].weight[a])
 	}
 }
 
