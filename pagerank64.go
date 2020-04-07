@@ -124,8 +124,8 @@ func (g *Graph64) Rank(α, ε float64, callback func(id uint64, rank float64)) {
 }
 
 // Reset clears all the current graph data.
-func (g *Graph64) Reset(size ...uint) {
-	capacity := uint(8)
+func (g *Graph64) Reset(size ...int) {
+	capacity := 8
 	if len(size) == 1 {
 		capacity = size[0]
 	}
