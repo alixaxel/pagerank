@@ -18,8 +18,8 @@ type Graph64 struct {
 }
 
 // NewGraph64 initializes and returns a new graph.
-func NewGraph64(size ...uint) *Graph64 {
-	capacity := uint(8)
+func NewGraph64(size ...int) *Graph64 {
+	capacity := 8
 	if len(size) == 1 {
 		capacity = size[0]
 	}

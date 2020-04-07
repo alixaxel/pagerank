@@ -18,8 +18,8 @@ type Graph32 struct {
 }
 
 // NewGraph32 initializes and returns a new graph.
-func NewGraph32(size ...uint) *Graph32 {
-	capacity := uint(8)
+func NewGraph32(size ...int) *Graph32 {
+	capacity := 8
 	if len(size) == 1 {
 		capacity = size[0]
 	}
@@ -124,8 +124,8 @@ func (g *Graph32) Rank(α, ε float32, callback func(id uint64, rank float32)) {
 }
 
 // Reset clears all the current graph data.
-func (g *Graph32) Reset(size ...uint) {
-	capacity := uint(8)
+func (g *Graph32) Reset(size ...int) {
+	capacity := 8
 	if len(size) == 1 {
 		capacity = size[0]
 	}
