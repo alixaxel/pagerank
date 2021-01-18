@@ -16,7 +16,7 @@ var (
 
 // Node32 is a node in a graph
 type Node32 struct {
-	sync.Mutex
+	sync.RWMutex
 	weight   [2]float32
 	outbound float32
 	edges    map[uint]float32
@@ -126,7 +126,7 @@ func (g *Graph32) Rank(α, ε float32, callback func(id uint64, rank float32)) {
 
 	update := func(adjustment float32, node *Node32) {
 		node.Lock()
-		aa, bb := α*node.weight[a], node.weight[b]
+		aa := α * node.weight[a]
 		node.Unlock()
 		for target, weight := range node.edges {
 			nodes[target].Lock()
@@ -134,6 +134,7 @@ func (g *Graph32) Rank(α, ε float32, callback func(id uint64, rank float32)) {
 			nodes[target].Unlock()
 		}
 		node.Lock()
+		bb := node.weight[b]
 		node.weight[b] = bb + adjustment
 		node.Unlock()
 		done <- true
