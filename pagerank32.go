@@ -125,9 +125,9 @@ func (g *Graph32) Rank(α, ε float32, callback func(id uint64, rank float32)) {
 	}
 
 	update := func(adjustment float32, node *Node32) {
-		node.Lock()
+		node.RLock()
 		aa := α * node.weight[a]
-		node.Unlock()
+		node.RUnlock()
 		for target, weight := range node.edges {
 			nodes[target].Lock()
 			nodes[target].weight[b] += aa * weight
