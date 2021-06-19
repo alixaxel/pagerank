@@ -5,6 +5,14 @@ import (
 	"testing"
 )
 
+func convert64(a map[uint64]float64) map[uint64]int {
+	b := make(map[uint64]int, len(a))
+	for key, value := range a {
+		b[key] = int(1000 * value)
+	}
+	return b
+}
+
 func TestEmpty64(t *testing.T) {
 	graph := NewGraph64()
 
@@ -41,7 +49,7 @@ func TestSimple64(t *testing.T) {
 		actual[node] = rank
 	})
 
-	if reflect.DeepEqual(actual, expected) != true {
+	if reflect.DeepEqual(convert64(actual), convert64(expected)) != true {
 		t.Error("Expected", expected, "but got", actual)
 	}
 }
@@ -67,7 +75,7 @@ func TestWeighted64(t *testing.T) {
 		actual[node] = rank
 	})
 
-	if reflect.DeepEqual(actual, expected) != true {
+	if reflect.DeepEqual(convert64(actual), convert64(expected)) != true {
 		t.Error("Expected", expected, "but got", actual)
 	}
 }
@@ -96,7 +104,7 @@ func TestDuplicates64(t *testing.T) {
 		actual[node] = rank
 	})
 
-	if reflect.DeepEqual(actual, expected) != true {
+	if reflect.DeepEqual(convert64(actual), convert64(expected)) != true {
 		t.Error("Expected", expected, "but got", actual)
 	}
 }
@@ -126,7 +134,7 @@ func TestDuplicatesAfterReset64(t *testing.T) {
 		actual[node] = rank
 	})
 
-	if reflect.DeepEqual(actual, expected) != true {
+	if reflect.DeepEqual(convert64(actual), convert64(expected)) != true {
 		t.Error("Expected", expected, "but got", actual)
 	}
 }
@@ -147,6 +155,14 @@ func BenchmarkGraph64(b *testing.B) {
 			results[node] = rank
 		})
 	}
+}
+
+func convert32(a map[uint64]float32) map[uint64]int {
+	b := make(map[uint64]int, len(a))
+	for key, value := range a {
+		b[key] = int(1000 * value)
+	}
+	return b
 }
 
 func TestEmpty32(t *testing.T) {
@@ -185,7 +201,7 @@ func TestSimple32(t *testing.T) {
 		actual[node] = rank
 	})
 
-	if reflect.DeepEqual(actual, expected) != true {
+	if reflect.DeepEqual(convert32(actual), convert32(expected)) != true {
 		t.Error("Expected", expected, "but got", actual)
 	}
 }
@@ -211,7 +227,7 @@ func TestWeighted32(t *testing.T) {
 		actual[node] = rank
 	})
 
-	if reflect.DeepEqual(actual, expected) != true {
+	if reflect.DeepEqual(convert32(actual), convert32(expected)) != true {
 		t.Error("Expected", expected, "but got", actual)
 	}
 }
@@ -240,7 +256,7 @@ func TestDuplicates32(t *testing.T) {
 		actual[node] = rank
 	})
 
-	if reflect.DeepEqual(actual, expected) != true {
+	if reflect.DeepEqual(convert32(actual), convert32(expected)) != true {
 		t.Error("Expected", expected, "but got", actual)
 	}
 }
@@ -270,7 +286,7 @@ func TestDuplicatesAfterReset32(t *testing.T) {
 		actual[node] = rank
 	})
 
-	if reflect.DeepEqual(actual, expected) != true {
+	if reflect.DeepEqual(convert32(actual), convert32(expected)) != true {
 		t.Error("Expected", expected, "but got", actual)
 	}
 }
