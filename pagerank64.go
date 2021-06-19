@@ -3,8 +3,14 @@ Package pagerank implements the *weighted* PageRank algorithm.
 */
 package pagerank
 
+import (
+	"fmt"
+	"sync"
+)
+
 // Node64 is a node in a graph
 type Node64 struct {
+	sync.RWMutex
 	weight   [2]float64
 	outbound float64
 	edges    map[uint]float64
@@ -12,9 +18,10 @@ type Node64 struct {
 
 // Graph64 holds node and edge data.
 type Graph64 struct {
-	count uint
-	index map[uint64]uint
-	nodes []Node64
+	Verbose bool
+	count   uint
+	index   map[uint64]uint
+	nodes   []Node64
 }
 
 // NewGraph64 initializes and returns a new graph.
@@ -68,38 +75,92 @@ func (g *Graph64) Rank(α, ε float64, callback func(id uint64, rank float64)) {
 	inverse := 1 / float64(len(nodes))
 
 	// Normalize all the edge weights so that their sum amounts to 1.
-	for _, node := range nodes {
+	if g.Verbose {
+		fmt.Println("normalize...")
+	}
+	done := make(chan bool, 8)
+	normalize := func(node *Node64) {
 		if outbound := node.outbound; outbound > 0 {
 			for target := range node.edges {
 				node.edges[target] /= outbound
 			}
 		}
+		done <- true
+	}
+	i, flight := 0, 0
+	for i < len(nodes) && flight < NumCPU {
+		go normalize(&nodes[i])
+		flight++
+		i++
+	}
+	for i < len(nodes) {
+		<-done
+		flight--
+		go normalize(&nodes[i])
+		flight++
+		i++
+	}
+	for j := 0; j < flight; j++ {
+		<-done
 	}
 
+	if g.Verbose {
+		fmt.Println("initialize...")
+	}
 	leak := float64(0)
 
 	a, b := 0, 1
-	for source, node := range nodes {
+	for source := range nodes {
 		nodes[source].weight[a] = inverse
 
-		if node.outbound == 0 {
+		if nodes[source].outbound == 0 {
 			leak += inverse
 		}
 	}
 
+	update := func(adjustment float64, node *Node64) {
+		node.RLock()
+		aa := α * node.weight[a]
+		node.RUnlock()
+		for target, weight := range node.edges {
+			nodes[target].Lock()
+			nodes[target].weight[b] += aa * weight
+			nodes[target].Unlock()
+		}
+		node.Lock()
+		bb := node.weight[b]
+		node.weight[b] = bb + adjustment
+		node.Unlock()
+		done <- true
+	}
 	for Δ > ε {
+		if g.Verbose {
+			fmt.Println("updating...")
+		}
 		adjustment := (1-α)*inverse + α*leak*inverse
-		for source, node := range nodes {
-			aa, bb := α*node.weight[a], node.weight[b]
-			for target, weight := range node.edges {
-				nodes[target].weight[b] += aa * weight
-			}
-
-			nodes[source].weight[b] = bb + adjustment
+		i, flight := 0, 0
+		for i < len(nodes) && flight < NumCPU {
+			go update(adjustment, &nodes[i])
+			flight++
+			i++
+		}
+		for i < len(nodes) {
+			<-done
+			flight--
+			go update(adjustment, &nodes[i])
+			flight++
+			i++
+		}
+		for j := 0; j < flight; j++ {
+			<-done
 		}
 
+		if g.Verbose {
+			fmt.Println("computing delta...")
+		}
 		Δ, leak = 0, 0
-		for source, node := range nodes {
+		for source := range nodes {
+			node := &nodes[source]
 			aa, bb := node.weight[a], node.weight[b]
 			if difference := aa - bb; difference < 0 {
 				Δ -= difference
@@ -114,6 +175,10 @@ func (g *Graph64) Rank(α, ε float64, callback func(id uint64, rank float64)) {
 		}
 
 		a, b = b, a
+
+		if g.Verbose {
+			fmt.Println(Δ, ε)
+		}
 	}
 
 	for key, value := range g.index {
